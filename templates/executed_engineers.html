@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h1 class="text-center">Executed Engineers</h1>
+
+<div class="container">
+    <!-- Select IQ Checklist -->
+    <form method="GET" class="mb-3">
+        <label class="form-label">Select IQ Checklist</label>
+        <select name="checklist_id" class="form-select" onchange="this.form.submit()">
+            <option value="">-- Select IQ --</option>
+            {% for checklist in checklists %}
+                <option value="{{ checklist.checklist_id }}" {% if selected_checklist_id == checklist.checklist_id %}selected{% endif %}>
+                    {{ checklist.name }}
+                </option>
+            {% endfor %}
+        </select>
+    </form>
+
+    <!-- Display Executed Engineers -->
+    {% if selected_checklist %}
+        <h3 class="mt-4">Engineers who executed: {{ selected_checklist.name }}</h3>
+        <ul>
+            {% for engineer in executed %}
+                <li>{{ engineer.name }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <!-- Display Pie Chart -->
+    {% if executed or remaining %}
+        <div class="d-flex justify-content-center">
+            <div style="max-width: 400px; width: 100%;">
+                <canvas id="executedEngineersChart"></canvas>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-center mt-3">
+            <span class="badge bg-primary me-2">Executed Engineers</span>
+            <span class="badge bg-danger">Remaining Engineers</span>
+        </div>
+    {% endif %}
+
+    <button class="btn btn-secondary mt-3" onclick="window.history.back();">Close</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    fetch("/executed_data?checklist_id={{ selected_checklist_id }}")
+    .then(response => response.json())
+    .then(data => {
+        let ctx = document.getElementById("executedEngineersChart").getContext("2d");
+        new Chart(ctx, {
+            type: "pie",
+            data: {
+                labels: ["Executed Engineers", "Remaining Engineers"],
+                datasets: [{
+                    data: [data.executed_count, data.remaining_count],
+                    backgroundColor: ["#007bff", "#dc3545"]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    });
+});
+</script>
+
+{% endblock %}

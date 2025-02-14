@@ -1,0 +1,172 @@
+/* General Styling */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 0;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 220px;
+    background-color: #1d3b53;
+    color: white;
+    position: fixed;
+    height: 100%;
+    padding: 20px;
+}
+
+.sidebar a {
+    display: block;
+    color: white;
+    text-decoration: none;
+    padding: 10px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+}
+
+.sidebar a:hover {
+    background-color: #15507f;
+}
+
+/* Navigation Menu */
+.navbar-nav {
+    background-color: #e0e0e0; /* Light Gray Background */
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.navbar-nav .nav-item {
+    margin: 0 5px;
+}
+
+.navbar-nav .nav-item .nav-link {
+    color: #333; /* Darker text for contrast */
+    font-weight: bold;
+    padding: 10px 15px;
+    border-radius: 5px;
+}
+
+.navbar-nav .nav-item .nav-link:hover {
+    background-color: #d6d6d6; /* Slightly darker gray on hover */
+}
+
+/* Main Content */
+.container {
+    margin-left: 240px;
+    padding: 20px;
+}
+
+/* Forms */
+input[type="text"],
+textarea,
+select {
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* Buttons */
+.btn {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background-color: #007bff;
+    color: white;
+}
+
+td {
+    background-color: #f2f2f2;
+}
+
+/* Modal */
+.modal-content {
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.modal-header {
+    background-color: #007bff;
+    color: white;
+    padding: 10px;
+}
+
+.modal-footer {
+    padding: 10px;
+    text-align: right;
+}
+
+/* Pie Chart Styling */
+.pie-chart-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
+/* Utility Classes */
+.text-center {
+    text-align: center;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.hidden {
+    display: none;
+}

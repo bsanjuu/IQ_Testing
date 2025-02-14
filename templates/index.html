@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container">
+    <h1 class="text-center my-4">IQ Checklist</h1>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <ul class="list-group">
+                {% for checklist in checklists %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">{{ checklist.name }}</span>
+                        <a href="{{ url_for('execute_iq', checklist_id=checklist.checklist_id) }}" class="btn btn-primary btn-sm">
+                            Execute
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="list-group-item text-center text-muted">
+                        No checklists available. <a href="{{ url_for('create_iq') }}" class="text-decoration-none">Create one here.</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

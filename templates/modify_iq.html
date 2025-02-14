@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h1 class="text-center">IQ Modification</h1>
+
+<div class="container">
+    <form method="GET">
+        <!-- Select Checklist -->
+        <div class="mb-3">
+            <label class="form-label">Checklist Name</label>
+            <select name="checklist_id" class="form-select" onchange="this.form.submit()">
+                <option value="">-- Select Checklist --</option>
+                {% for c in checklists %}
+                    <option value="{{ c.checklist_id }}" {% if checklist and c.checklist_id == checklist.checklist_id %}selected{% endif %}>
+                        {{ c.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+
+    {% if checklist %}
+    <form method="POST">
+        <input type="hidden" name="selected_checklist" value="{{ checklist.checklist_id }}">
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>IQ Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <a href="#" class="text-decoration-none">{{ checklist.name }}</a>
+                    </td>
+                    <td>
+                        <button type="submit" name="action" value="add_item" class="btn btn-success">Add Item</button>
+                        <a href="{{ url_for('executed_engineers', checklist_id=checklist.checklist_id) }}" class="btn btn-info">
+                            View Executed Engineers
+                        </a>
+                        <button type="button" class="btn btn-primary">Edit IQ</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Checklist Items -->
+        <h3>Items</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in checklist.items %}
+                <tr>
+                    <td>{{ item.description }}</td>
+                    <td>
+                        <form method="POST" class="d-inline">
+                            <input type="hidden" name="item_id" value="{{ item.item_id }}">
+                            <button type="submit" name="action" value="delete_item" class="btn btn-danger">Remove</button>
+                        </form>
+                        <button type="button" class="btn btn-warning edit-item-btn" data-item-id="{{ item.item_id }}" data-item-desc="{{ item.description }}">
+                            Edit Item
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </form>
+    {% endif %}
+</div>
+
+<!-- Edit Item Modal -->
+<div id="editItemModal" class="modal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="item_id" id="editItemId">
+                    <input type="text" name="edit_desc" id="editItemDesc" class="form-control">
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" name="action" value="edit_item" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".edit-item-btn").forEach(button => {
+        button.addEventListener("click", function () {
+            document.getElementById("editItemId").value = this.getAttribute("data-item-id");
+            document.getElementById("editItemDesc").value = this.getAttribute("data-item-desc");
+            new bootstrap.Modal(document.getElementById("editItemModal")).show();
+        });
+    });
+});
+</script>
+
+{% endblock %}

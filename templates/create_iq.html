@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h1>Create IQ Checklist</h1>
+
+    {% if error_message %}
+    <div class="alert alert-danger">
+        {{ error_message }}
+    </div>
+    {% endif %}
+
+    <form method="POST">
+        <input type="text" name="name" placeholder="Checklist Name" required>
+        <textarea name="description" placeholder="Checklist Description"></textarea>
+
+        <div id="items-container">
+            <input type="text" name="items[]" placeholder="Checklist Item" required>
+        </div>
+        <button type="button" id="add-item-btn">Add More Items</button>
+
+        <button type="submit">Create IQ</button>
+    </form>
+
+    <script>
+        document.getElementById("add-item-btn").addEventListener("click", function() {
+            let container = document.getElementById("items-container");
+            let newInput = document.createElement("input");
+            newInput.type = "text";
+            newInput.name = "items[]";
+            newInput.placeholder = "Checklist Item";
+            container.appendChild(newInput);
+        });
+    </script>
+{% endblock %}

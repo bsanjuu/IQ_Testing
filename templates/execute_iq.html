@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h1 class="text-center">Operational Qualification Manager</h1>
+
+<div class="container">
+    <!-- Checklist Selection -->
+    <form method="GET">
+        <div class="mb-3">
+            <label class="form-label">Select Checklist</label>
+            <select name="checklist_id" class="form-select" onchange="this.form.submit()">
+                <option value="">-- Select Checklist --</option>
+                {% for c in checklists %}
+                    <option value="{{ c.checklist_id }}" {% if checklist and checklist.checklist_id == c.checklist_id %}selected{% endif %}>
+                        {{ c.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+
+    <!-- Only show execution form if a checklist is selected -->
+    {% if checklist %}
+    <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="selected_checklist" value="{{ checklist.checklist_id }}">
+
+        <!-- Engineer Selection -->
+        <div class="mb-3">
+            <label class="form-label">Select Executing Engineer</label>
+            <select name="selected_engineer" class="form-select" required>
+                <option value="">-- Select Engineer --</option>
+                {% for e in engineers %}
+                    <option value="{{ e.engineer_id }}">{{ e.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <h2>Checklist: {{ checklist.name }}</h2>
+
+        <!-- Display Checklist Items -->
+        {% if checklist.items %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Serial No</th>
+                    <th>Item</th>
+                    <th>Executed (Yes/No)</th>
+                    <th>Screenshot</th>
+                </tr>
+            </thead>
+           <tbody>
+    {% if checklist and checklist.items %}
+        {% for item in checklist.items %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ item.description }}</td>
+            <td>
+                <select name="execute_{{ item.item_id }}" class="form-select">
+                    <option value="No" {% if not item.executed %}selected{% endif %}>No</option>
+                    <option value="Yes" {% if item.executed %}selected{% endif %}>Yes</option>
+                </select>
+            </td>
+            <td>
+                <input type="file" name="screenshot_{{ item.item_id }}" class="form-control">
+                {% if item.screenshot %}
+                    <br>
+                    <img src="{{ url_for('uploaded_file', filename=item.screenshot) }}" width="100">
+                {% else %}
+                    <br>No file uploaded.
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    {% else %}
+        <tr><td colspan="4">No items found for this checklist.</td></tr>
+    {% endif %}
+</tbody>
+
+        </table>
+        {% else %}
+        <p>No items found for this checklist.</p>
+        {% endif %}
+
+        <button type="submit" class="btn btn-success">Save Execution</button>
+    </form>
+    {% endif %}
+</div>
+
+{% endblock %}
