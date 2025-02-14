@@ -4,41 +4,53 @@ db = SQLAlchemy()
 
 
 class Engineer(db.Model):
-    engineer_id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # ✅ Ensure auto-increment
-    name = db.Column(db.String(100), nullable=False, unique=True)  # ✅ Enforce unique names
-    status = db.Column(db.String(50), default="Not Started")  # ✅ Track execution status
+    __tablename__ = 'engineers'
 
-    # ✅ Relationship to executed checklists
-    executions = db.relationship('Execution', backref='engineer', lazy=True)
+    engineer_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    status = db.Column(db.String(50), default="Not Started")
+
+    # Relationship to Execution
+    executions = db.relationship('Execution', backref='engineer', lazy=True, cascade="all, delete-orphan")
 
 
 class Checklist(db.Model):
-    checklist_id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # ✅ Changed 'id' to 'checklist_id'
+    __tablename__ = 'checklists'
+
+    checklist_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(200), nullable=False, unique=True)
     description = db.Column(db.String(500))
-    items = db.relationship('ChecklistItem', backref='checklist', lazy=True,
-                            cascade="all, delete-orphan")  # ✅ Cascade delete items if checklist is deleted
-    executions = db.relationship('Execution', backref='checklist',
-                                 lazy=True)  # ✅ Track which engineers executed this IQ
+
+    # Relationship to ChecklistItem
+    items = db.relationship('ChecklistItem', backref='checklist', lazy=True, cascade="all, delete-orphan")
+
+    # Relationship to Execution
+    executions = db.relationship('Execution', backref='checklist', lazy=True, cascade="all, delete-orphan")
 
 
 class ChecklistItem(db.Model):
-    item_id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # ✅ Changed 'id' to 'item_id'
+    __tablename__ = 'checklist_items'
+
+    item_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     description = db.Column(db.String(500), nullable=False)
     executed = db.Column(db.Boolean, default=False)
-    screenshot = db.Column(db.String(300))
+    screenshot = db.Column(db.String(300), nullable=True)
 
-    checklist_id = db.Column(db.Integer, db.ForeignKey('checklist.checklist_id'),
-                             nullable=False)  # ✅ FK linking to Checklist
-    executed_by = db.Column(db.String(100))  # ✅ Stores engineer’s name who executed the task
+    # Foreign key linking to Checklist
+    checklist_id = db.Column(db.Integer, db.ForeignKey('checklists.checklist_id'), nullable=False)
+    executed_by = db.Column(db.String(100), nullable=True)  # Stores engineer’s name
+
 
 class Execution(db.Model):
     """Tracks execution details for an IQ (checklist) by engineers."""
+    __tablename__ = 'executions'
+
     execution_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    engineer_id = db.Column(db.Integer, db.ForeignKey('engineer.engineer_id'), nullable=False)
-    checklist_id = db.Column(db.Integer, db.ForeignKey('checklist.checklist_id'), nullable=False)
-    status = db.Column(db.String(50), default="In Progress")  # Tracks execution status
-    executed_at = db.Column(db.DateTime, default=db.func.current_timestamp())  # Timestamp
+    engineer_id = db.Column(db.Integer, db.ForeignKey('engineers.engineer_id'), nullable=False)
+    checklist_id = db.Column(db.Integer, db.ForeignKey('checklists.checklist_id'), nullable=False)
+    status = db.Column(db.String(50), default="In Progress")
+    executed_at = db.Column(db.DateTime, default=db.func.current_timestamp())
 
     def mark_completed(self):
+        """Mark execution as completed."""
         self.status = "Completed"
