@@ -1,0 +1,12 @@
+Flask==3.0.0
+Flask-SQLAlchemy==3.0.0
+Flask-Migrate==4.0.4
+Werkzeug==3.0.1
+gunicorn==21.2.0
+psycopg2-binary==2.9.9  # If using PostgreSQL
+sqlite3==3.39.2  # If using SQLite (default in Python)
+flask-wtf==1.1.1
+wtforms==3.1.1
+Flask-Uploads==0.2.1
+Flask-Cors==3.0.10
+chart.js==2.9.4
