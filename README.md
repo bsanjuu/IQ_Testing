@@ -1,4 +1,3 @@
-Here’s a well-formatted **`README.md`** file:
 
 ```md
 # IQ Tracker
