@@ -5,8 +5,6 @@ from werkzeug.utils import secure_filename
 import os
 
 from models import db, Engineer, Checklist, ChecklistItem, Execution  # Import models
-from insert_users import insert_engineers
-from insert_iqs import insert_iqs
 
 # ✅ Initialize Flask App
 app = Flask(__name__)
@@ -17,26 +15,36 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(BASE_DIR, 'ins
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.path.join(BASE_DIR, 'uploads')
 
+# ✅ Ensure the upload folder exists
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
 # ✅ Initialize Database & Migration
 db.init_app(app)
 migrate = Migrate(app, db)
 
-# ✅ Ensure Database is Created and Initial Data is Inserted
+# ✅ Insert default data into the database (Fixed Circular Import)
 with app.app_context():
     db.create_all()
+
+    from insert_users import insert_engineers
+    from insert_iqs import insert_iqs
+
     insert_engineers()  # Insert engineers on startup
-    insert_iqs()        # Insert checklists on startup
+    insert_iqs()  # Insert checklists on startup
+
 
 # ✅ Serve Uploaded Files
 @app.route('/uploads/<path:filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+
 # ✅ Main Routes
 @app.route('/')
 def index():
     checklists = Checklist.query.all()
     return render_template('index.html', checklists=checklists)
+
 
 @app.route('/create_iq', methods=['GET', 'POST'])
 def create_iq():
@@ -63,10 +71,12 @@ def create_iq():
 
     return render_template('create_iq.html')
 
+
 @app.route('/modify_iq', methods=['GET', 'POST'])
 def modify_iq():
     checklists = Checklist.query.all()
-    selected_checklist_id = request.args.get('checklist_id', type=int) or request.form.get('selected_checklist', type=int)
+    selected_checklist_id = request.args.get('checklist_id', type=int) or request.form.get('selected_checklist',
+                                                                                           type=int)
     checklist = Checklist.query.get(selected_checklist_id) if selected_checklist_id else None
 
     if request.method == 'POST':
@@ -100,6 +110,7 @@ def modify_iq():
 
     return render_template('modify_iq.html', checklists=checklists, checklist=checklist)
 
+
 @app.route('/execute_iq', methods=['GET', 'POST'])
 def execute_iq():
     checklists = Checklist.query.all()
@@ -119,7 +130,7 @@ def execute_iq():
             return "Error: Selected checklist or engineer does not exist", 400
 
         # ✅ Ensure only ONE folder per checklist (IQ)
-        iq_folder = os.path.join(app.config['UPLOAD_FOLDER'], f"IQ_{checklist.checklist_id}")  # Unique folder per IQ
+        iq_folder = os.path.join(app.config['UPLOAD_FOLDER'], f"IQ_{checklist.checklist_id}")
         os.makedirs(iq_folder, exist_ok=True)
 
         # ✅ Each engineer gets a subfolder inside the IQ folder
@@ -131,8 +142,6 @@ def execute_iq():
         for item in checklist.items:
             executed = request.form.get(f'execute_{item.item_id}') == 'Yes'
             file = request.files.get(f'screenshot_{item.item_id}')
-            screenshot_filename = None
-            file_path = None
 
             if file and file.filename:
                 screenshot_filename = secure_filename(file.filename)
@@ -148,11 +157,14 @@ def execute_iq():
             if not executed:
                 completed_all_items = False
 
-        # ✅ Insert Execution Record if it does not exist
+        # ✅ Insert or update Execution Record
         execution_record = Execution.query.filter_by(engineer_id=engineer_id, checklist_id=checklist_id).first()
 
         if not execution_record:
-            execution_record = Execution(engineer_id=engineer_id, checklist_id=checklist_id, status="Completed" if completed_all_items else "In Progress")
+            execution_record = Execution(
+                engineer_id=engineer_id, checklist_id=checklist_id,
+                status="Completed" if completed_all_items else "In Progress"
+            )
             db.session.add(execution_record)
         else:
             execution_record.status = "Completed" if completed_all_items else "In Progress"
@@ -163,6 +175,7 @@ def execute_iq():
         return redirect(url_for('execute_iq', checklist_id=checklist_id))
 
     return render_template('execute_iq.html', checklists=checklists, engineers=engineers, checklist=checklist)
+
 
 @app.route('/executed_engineers')
 def executed_engineers():
@@ -191,6 +204,7 @@ def executed_engineers():
     return render_template('executed_engineers.html', checklists=checklists, executed=[], remaining=[],
                            selected_checklist_id=None, selected_checklist=None)
 
+
 @app.route('/executed_data')
 def executed_data():
     checklist_id = request.args.get('checklist_id', type=int)
@@ -203,6 +217,7 @@ def executed_data():
     ).count()
 
     return jsonify({"executed_count": executed_count, "remaining_count": remaining_count})
+
 
 if __name__ == '__main__':
     app.run(debug=True)
