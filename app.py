@@ -5,8 +5,10 @@ from werkzeug.utils import secure_filename
 import os
 
 from models import db, Engineer, Checklist, ChecklistItem, Execution  # Import models
+from insert_users import insert_engineers
+from insert_iqs import insert_iqs
 
-# ✅ Initialize Flask App First
+# ✅ Initialize Flask App
 app = Flask(__name__)
 
 # ✅ Configure Database
@@ -19,11 +21,13 @@ app.config['UPLOAD_FOLDER'] = os.path.join(BASE_DIR, 'uploads')
 db.init_app(app)
 migrate = Migrate(app, db)
 
-# ✅ Ensure Database is Created
+# ✅ Ensure Database is Created and Initial Data is Inserted
 with app.app_context():
     db.create_all()
+    insert_engineers()  # Insert engineers on startup
+    insert_iqs()        # Insert checklists on startup
 
-# ✅ Move @app.route below app initialization
+# ✅ Serve Uploaded Files
 @app.route('/uploads/<path:filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
@@ -59,15 +63,10 @@ def create_iq():
 
     return render_template('create_iq.html')
 
-
 @app.route('/modify_iq', methods=['GET', 'POST'])
 def modify_iq():
     checklists = Checklist.query.all()
-
-    # ✅ Retrieve selected checklist from the form or URL query parameter
-    selected_checklist_id = request.args.get('checklist_id', type=int) or request.form.get('selected_checklist',
-                                                                                           type=int)
-
+    selected_checklist_id = request.args.get('checklist_id', type=int) or request.form.get('selected_checklist', type=int)
     checklist = Checklist.query.get(selected_checklist_id) if selected_checklist_id else None
 
     if request.method == 'POST':
@@ -101,7 +100,6 @@ def modify_iq():
 
     return render_template('modify_iq.html', checklists=checklists, checklist=checklist)
 
-
 @app.route('/execute_iq', methods=['GET', 'POST'])
 def execute_iq():
     checklists = Checklist.query.all()
@@ -122,11 +120,11 @@ def execute_iq():
 
         # ✅ Ensure only ONE folder per checklist (IQ)
         iq_folder = os.path.join(app.config['UPLOAD_FOLDER'], f"IQ_{checklist.checklist_id}")  # Unique folder per IQ
-        os.makedirs(iq_folder, exist_ok=True)  # Ensure folder exists
+        os.makedirs(iq_folder, exist_ok=True)
 
         # ✅ Each engineer gets a subfolder inside the IQ folder
         engineer_folder = os.path.join(iq_folder, engineer.name.replace(" ", "_"))
-        os.makedirs(engineer_folder, exist_ok=True)  # Ensure engineer folder exists
+        os.makedirs(engineer_folder, exist_ok=True)
 
         completed_all_items = True
 
@@ -141,7 +139,6 @@ def execute_iq():
                 file_path = os.path.join(engineer_folder, screenshot_filename)
                 file.save(file_path)
 
-                # ✅ Store relative path for easy retrieval
                 relative_path = os.path.relpath(file_path, app.config['UPLOAD_FOLDER'])
                 item.screenshot = relative_path
 
@@ -167,8 +164,6 @@ def execute_iq():
 
     return render_template('execute_iq.html', checklists=checklists, engineers=engineers, checklist=checklist)
 
-
-
 @app.route('/executed_engineers')
 def executed_engineers():
     checklists = Checklist.query.all()
@@ -180,13 +175,11 @@ def executed_engineers():
     if selected_checklist_id:
         selected_checklist = Checklist.query.get(selected_checklist_id)
 
-        # ✅ Fetch engineers from Execution table who completed this checklist
         executed = Engineer.query.join(Execution).filter(
             Execution.checklist_id == selected_checklist_id,
             Execution.status == "Completed"
         ).all()
 
-        # ✅ Fetch engineers who have not completed this checklist
         remaining = Engineer.query.filter(
             ~Engineer.engineer_id.in_([e.engineer_id for e in executed])
         ).all()
@@ -197,7 +190,6 @@ def executed_engineers():
 
     return render_template('executed_engineers.html', checklists=checklists, executed=[], remaining=[],
                            selected_checklist_id=None, selected_checklist=None)
-
 
 @app.route('/executed_data')
 def executed_data():
