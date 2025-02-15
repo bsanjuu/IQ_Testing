@@ -1,39 +1,62 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from werkzeug.utils import secure_filename
 import os
+from models import Engineer, Checklist, ChecklistItem, Execution
+from config import app, db
+from werkzeug.utils import secure_filename
 
-from models import db, Engineer, Checklist, ChecklistItem, Execution  # Import models
-
-# ✅ Initialize Flask App
-app = Flask(__name__)
-
-# ✅ Configure Database
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'checklists.db')}"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = os.path.join(BASE_DIR, 'uploads')
-
-# ✅ Ensure the upload folder exists
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
-# ✅ Initialize Database & Migration
-db.init_app(app)
+# ✅ Initialize Database Migration
 migrate = Migrate(app, db)
 
-# ✅ Insert default data into the database (Fixed Circular Import)
+# ✅ Insert Initial Data
+engineers = [
+    {"name": "Rishika Demi"},
+    {"name": "Sanjeevlu Buggargani"},
+    {"name": "Aarav Sharma"},
+    {"name": "Neha Verma"},
+    {"name": "Rahul Reddy"},
+    {"name": "Priya Nair"},
+    {"name": "Vikram Choudhary"},
+    {"name": "Ananya Iyer"},
+    {"name": "Rohan Patil"},
+    {"name": "Deepika Raj"}
+]
+
+iq_checklists = [
+    {"name": "Software Installation IQ", "description": "Checklist for software installation verification",
+     "items": ["Download the installer", "Run setup wizard", "Accept terms and conditions", "Verify installation"]},
+    {"name": "System Configuration IQ", "description": "Checklist for configuring the system",
+     "items": ["Set up environment variables", "Configure firewall rules", "Verify network connectivity"]},
+    {"name": "Security Compliance IQ", "description": "Checklist for verifying security compliance",
+     "items": ["Enable 2FA", "Configure secure passwords", "Update security patches", "Perform vulnerability scan"]}
+]
+
+
+def insert_data():
+    with app.app_context():
+        for engineer_data in engineers:
+            if not Engineer.query.filter_by(name=engineer_data["name"]).first():
+                db.session.add(Engineer(name=engineer_data["name"]))
+
+        for checklist_data in iq_checklists:
+            existing_checklist = Checklist.query.filter_by(name=checklist_data["name"]).first()
+            if not existing_checklist:
+                checklist = Checklist(name=checklist_data["name"], description=checklist_data["description"])
+                db.session.add(checklist)
+                db.session.commit()  # Commit first to get the checklist_id
+
+                # Insert checklist items
+                for item_desc in checklist_data["items"]:
+                    db.session.add(ChecklistItem(description=item_desc, checklist_id=checklist.checklist_id))
+
+        db.session.commit()
+        print("✅ Initial data inserted successfully!")
+
+
 with app.app_context():
     db.create_all()
+    insert_data()
 
-    from insert_users import insert_engineers
-    from insert_iqs import insert_iqs
-
-    insert_engineers()  # Insert engineers on startup
-    insert_iqs()  # Insert checklists on startup
-
-
-# ✅ Serve Uploaded Files
 @app.route('/uploads/<path:filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)

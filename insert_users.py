@@ -1,4 +1,5 @@
-from app import app, db
+from flask import current_app
+from config import db  # ✅ Import db from config
 from models import Engineer
 
 # List of engineers to insert
@@ -17,16 +18,12 @@ engineers = [
 
 def insert_engineers():
     """Insert engineers into the database only if they do not already exist."""
-    with app.app_context():  # ✅ Ensures database operations run inside Flask context
+    with current_app.app_context():
         for engineer_data in engineers:
             existing_engineer = Engineer.query.filter_by(name=engineer_data["name"]).first()
-
-            if not existing_engineer:  # Avoid duplicates
-                engineer = Engineer(name=engineer_data["name"])  # ✅ No need to set engineer_id manually
+            if not existing_engineer:
+                engineer = Engineer(name=engineer_data["name"])
                 db.session.add(engineer)
 
         db.session.commit()
         print("✅ Engineers inserted successfully!")
-
-if __name__ == "__main__":
-    insert_engineers()
